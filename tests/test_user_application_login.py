@@ -1,11 +1,8 @@
-import time
 import pytest
 
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
-from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.support.ui import WebDriverWait
-from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.by import By
 
@@ -20,9 +17,6 @@ def appium_driver():
     # Создание драйвера Appium
     driver = webdriver.Remote('http://26.177.237.19:4723', options=options)
 
-    # # Выполнить авторизацию перед выполнением теста
-    # login(driver)
-
     yield driver  # Возвращает драйвер тесту
 
     # Завершить сеанс после выполнения теста
@@ -31,55 +25,61 @@ def appium_driver():
 
 # Параметры для тестов
 @pytest.mark.parametrize("username, password, expected_result", [
-    ("qa.ajax.app.automation@gmail.com", "qa_automation_password", "Add Hub"),  # Позитивный тест
+    ("qa.ajax.app.automation@gmail.com", "qa_automation_password", "successful authorization"),  # Позитивный тест
     ("qa.ajax.app.automation@gmail.com", "fdgdfgdfg", "Wrong login or password"),  # Негативный тест
     ("fdgdfdfgdfghl", "fgdfgdfgdf", "Invalid email format"),  # Негативный тест
 ])
 def test_user_application_login(username, password, expected_result, appium_driver):
-    # wait = WebDriverWait(appium_driver, 10)  # Максимальное время ожидания в секундах
-    #
-    # application = wait.until(ec.presence_of_element_located((By.XPATH, '//*[@text="Ajax"]')))
+    wait = WebDriverWait(appium_driver, 5)  # Максимальное время ожидания в секундах
 
     # Открытие приложения
-    application = appium_driver.find_element(by=AppiumBy.XPATH, value='//*[@text="Ajax"]')
+    application = wait.until(ec.presence_of_element_located((By.XPATH, '//*[@text="Ajax"]')))
     application.click()
 
     # Нажатия кнопки для перехода на страницу авторизации
-    time.sleep(1)
-    first_login_button = appium_driver.find_elements(by=AppiumBy.XPATH, value='//*[@class="android.widget.Button"]')
+    first_login_button = wait.until(ec.presence_of_all_elements_located((By.XPATH, '//*[@class="android.widget.Button"]')))
     first_login_button[0].click()
 
     # Ввод логина и пароля в поля авторизации
-    time.sleep(1)
-    text_fields = appium_driver.find_elements(by=AppiumBy.XPATH, value='//*[@class="android.widget.EditText"]')
+    text_fields = wait.until(ec.presence_of_all_elements_located((By.XPATH, '//*[@class="android.widget.EditText"]')))
     if text_fields[0].text:
         text_fields[0].clear()
     text_fields[0].send_keys(username)
     text_fields[1].send_keys(password)
 
     # Нажатия кнопки логина
-    time.sleep(1)
-    second_login_button = appium_driver.find_elements(by=AppiumBy.XPATH, value='//*[@class="android.widget.Button"]')
+    second_login_button = wait.until(ec.presence_of_all_elements_located((By.XPATH,
+                                                                          '//*[@class="android.widget.Button"]')))
     second_login_button[1].click()
 
-    time.sleep(3)
-    result_message = appium_driver.find_elements(by=AppiumBy.XPATH, value='//*[@resource-id="com.ajaxsystems:id/text"]')
+    # Проверка на наличие поля с ошибкой авторизации
+    try:
+        result_message = wait.until(ec.presence_of_all_elements_located((By.XPATH,
+                                                                         '//*[@resource-id="com.ajaxsystems:id/snackbar_text"]')))
+    except Exception as e:
+        print(e)
+        result_message = False
 
-    if result_message[0].text == "Add Hub":
-        print(result_message[0].text)
+    if not result_message:
         # Успешный сценарий
-        assert result_message[0].text == expected_result
+        try:
+            # Еще одна проверка авторизации, через нахождение элемента "SideBar"
+            menu_button = wait.until(ec.presence_of_element_located((By.XPATH,
+                                                                 '//*[@resource-id="com.ajaxsystems:id/menuDrawer"]')))
+            menu_button.click()
+            result_message = "successful authorization"
+        except Exception:
+            result_message = "failed authorization"
+        assert result_message == expected_result
 
-        menu_button = appium_driver.find_element(by=AppiumBy.XPATH,
-                                                 value='//*[@resource-id="com.ajaxsystems:id/menuDrawer"]')
-        menu_button.click()
-
-        setting_button = appium_driver.find_element(by=AppiumBy.XPATH,
-                                                    value='//*[@resource-id="com.ajaxsystems:id/settings"]')
+        # Нажатие на кнопку "Settings"
+        setting_button = wait.until(ec.presence_of_element_located((By.XPATH,
+                                                                    '//*[@resource-id="com.ajaxsystems:id/settings"]')))
         setting_button.click()
 
-        sign_out_button = appium_driver.find_element(by=AppiumBy.XPATH,
-                                                     value='//*[@bounds="[0,1728][1080,1917]"]')
+        # Выход из учетной записи приложения
+        sign_out_button = wait.until(ec.presence_of_element_located((By.XPATH,
+                                                                     '//*[@bounds="[0,1728][1080,1917]"]')))
         sign_out_button.click()
 
         # Переход на домашнюю страницу
@@ -87,14 +87,11 @@ def test_user_application_login(username, password, expected_result, appium_driv
 
     else:
         # Негативный сценарий
-        time.sleep(2)
-        error_message = appium_driver.find_element(by=AppiumBy.XPATH,
-                                                   value='//*[@resource-id="com.ajaxsystems:id/snackbar_text"]')
-        assert error_message.text == expected_result
+        assert result_message[0].text == expected_result
 
-        time.sleep(2)
-        back_button = appium_driver.find_element(by=AppiumBy.XPATH,
-                                                 value='//*[@resource-id="com.ajaxsystems:id/back"]')
+        # Нажатие на кнопку "Back"
+        back_button = wait.until(ec.presence_of_element_located((By.XPATH,
+                                                                 '//*[@resource-id="com.ajaxsystems:id/back"]')))
         back_button.click()
 
         # Переход на домашнюю страницу
