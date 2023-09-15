@@ -1,21 +1,14 @@
 import pytest
 
-from appium import webdriver
-from appium.options.android import UiAutomator2Options
+from selenium.webdriver.common.by import By
+from appium_driver import create_appium_driver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.common.by import By
 
 
 @pytest.fixture(scope="function")
 def appium_driver():
-    # Настройки для подключения к Appium серверу
-    options = UiAutomator2Options()
-    options.platformVersion = '12'
-    options.udid = 'emulator-5554'
-
-    # Создание драйвера Appium
-    driver = webdriver.Remote('http://26.177.237.19:4723', options=options)
+    driver = create_appium_driver()  # Использование функции
 
     yield driver  # Возвращает драйвер тесту
 
@@ -33,6 +26,7 @@ def test_user_application_login(username, password, expected_result, appium_driv
     wait = WebDriverWait(appium_driver, 5)  # Максимальное время ожидания в секундах
 
     # Открытие приложения
+    appium_driver.press_keycode(3)
     application = wait.until(ec.presence_of_element_located((By.XPATH, '//*[@text="Ajax"]')))
     application.click()
 
