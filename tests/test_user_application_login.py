@@ -1,5 +1,6 @@
 import pytest
 
+from config import LOGIN, PASSWORD
 from selenium.webdriver.common.by import By
 from appium_driver import create_appium_driver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 @pytest.fixture(scope="function")
 def appium_driver():
-    driver = create_appium_driver()  # Использование функции
+    driver = create_appium_driver()
 
     yield driver  # Возвращает драйвер тесту
 
@@ -18,9 +19,9 @@ def appium_driver():
 
 # Параметры для тестов
 @pytest.mark.parametrize("username, password, expected_result", [
-    ("qa.ajax.app.automation@gmail.com", "qa_automation_password", "successful authorization"),  # Позитивный тест
-    ("qa.ajax.app.automation@gmail.com", "fdgdfgdfg", "Wrong login or password"),  # Негативный тест
-    ("fdgdfdfgdfghl", "fgdfgdfgdf", "Invalid email format"),  # Негативный тест
+    (LOGIN, PASSWORD, "successful authorization"),  # Позитивный тест
+    ("somemail@gmail.com", "wrongpass", "Wrong login or password"),  # Негативный тест
+    ("fdgdfdfgdfghl", "wrongpass", "Invalid email format"),  # Негативный тест
 ])
 def test_user_application_login(username, password, expected_result, appium_driver):
     wait = WebDriverWait(appium_driver, 5)  # Максимальное время ожидания в секундах

@@ -2,3 +2,4 @@ technical_specifications.md
 user_application_login.py
 /venv/
 .pytest_cache/
+tests/config.py
