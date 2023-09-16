@@ -85,15 +85,14 @@ def appium_driver():
     driver.quit()
 
 
-@pytest.mark.parametrize("resource_id, test_value, expected_result", [
+@pytest.mark.parametrize("resource_id, test_resource_id, expected_result", [
     ("com.ajaxsystems:id/settings", "com.ajaxsystems:id/toolbarTitle", "Settings"),  # Проверка элемента "App Settings"
     ("com.ajaxsystems:id/help", "com.ajaxsystems:id/toolbarTitle", "Installation Manuals"),  # Проверка элемента "Help"
     ("com.ajaxsystems:id/logs", "com.ajaxsystems:id/title", "Report a Problem"),  # Проверка элемента "Report a Problem"
     ("com.ajaxsystems:id/addHub", "com.ajaxsystems:id/toolbarTitle", "Add Hub"),  # Проверка кнопки "Add Hub"
 ])
-def test_sidebar_functionality(resource_id, test_value, expected_result, appium_driver):
-    write_in_log_info(
-        f"Выполняется тест с данными: node_detail={resource_id}, expected_result={expected_result}")
+def test_sidebar_functionality(resource_id, test_resource_id, expected_result, appium_driver):
+    write_in_log_info(f"Выполняется тест с данными: node_detail={resource_id}, test_resource_id= {test_resource_id}, expected_result={expected_result}")
     try:
         wait = WebDriverWait(appium_driver, 5)  # Максимальное время ожидания в секундах
 
@@ -107,7 +106,7 @@ def test_sidebar_functionality(resource_id, test_value, expected_result, appium_
         setting_button.click()
 
         # Поиск нужного элемента для подтверждения успешной работы элемента "SideBar"
-        result_value = wait.until(ec.presence_of_element_located((By.XPATH, f'//*[@resource-id="{test_value}"]')))
+        result_value = wait.until(ec.presence_of_element_located((By.XPATH, f'//*[@resource-id="{test_resource_id}"]')))
         result_text = result_value.text
         appium_driver.press_keycode(4)
 
