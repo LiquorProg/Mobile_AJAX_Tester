@@ -85,52 +85,33 @@ def appium_driver():
     driver.quit()
 
 
-@pytest.mark.parametrize("resource_id, expected_result", [
-    ("com.ajaxsystems:id/settings", "successful authorization"),  # Проверка элемента "App Settings"
-    ("com.ajaxsystems:id/help", "Invalid email format"),  # Проверка элемента "Help"
-    ("com.ajaxsystems:id/logs", "Wrong login or password"),  # Проверка элемента "Report a Problem"
-    ("com.ajaxsystems:id/addHub", "Wrong login or password"),  # Проверка кнопки "Add Hub"
+@pytest.mark.parametrize("resource_id, test_value, expected_result", [
+    ("com.ajaxsystems:id/settings", "com.ajaxsystems:id/toolbarTitle", "Settings"),  # Проверка элемента "App Settings"
+    ("com.ajaxsystems:id/help", "com.ajaxsystems:id/toolbarTitle", "Installation Manuals"),  # Проверка элемента "Help"
+    ("com.ajaxsystems:id/logs", "com.ajaxsystems:id/title", "Report a Problem"),  # Проверка элемента "Report a Problem"
+    ("com.ajaxsystems:id/addHub", "com.ajaxsystems:id/toolbarTitle", "Add Hub"),  # Проверка кнопки "Add Hub"
 ])
-def test_sidebar_functionality(resource_id, expected_result, appium_driver):
+def test_sidebar_functionality(resource_id, test_value, expected_result, appium_driver):
     write_in_log_info(
         f"Выполняется тест с данными: node_detail={resource_id}, expected_result={expected_result}")
     try:
         wait = WebDriverWait(appium_driver, 5)  # Максимальное время ожидания в секундах
-        #
-        # # Открытие приложения
-        # appium_driver.press_keycode(3)
-        # application = wait.until(ec.presence_of_element_located((By.XPATH, '//*[@text="Ajax"]')))
-        # application.click()
-        #
-        # # Нажатия кнопки для перехода на страницу авторизации
-        # first_login_button = wait.until(ec.presence_of_all_elements_located((By.XPATH,
-        #                                                                      '//*[@class="android.widget.Button"]')))
-        # first_login_button[0].click()
-        #
-        # # Ввод логина и пароля в поля авторизации
-        # text_fields = wait.until(ec.presence_of_all_elements_located((By.XPATH,
-        #                                                               '//*[@class="android.widget.EditText"]')))
-        # if text_fields[0].text:
-        #     text_fields[0].clear()
-        # text_fields[0].send_keys(LOGIN)
-        # text_fields[1].send_keys(PASSWORD)
-        #
-        # # Нажатия кнопки логина
-        # second_login_button = wait.until(ec.presence_of_all_elements_located((By.XPATH,
-        #                                                                       '//*[@class="android.widget.Button"]')))
-        # second_login_button[1].click()
 
         # Нажатия элемента "SideBar"
         menu_button = wait.until(ec.presence_of_element_located((By.XPATH,
-                                                                     '//*[@resource-id="com.ajaxsystems:id/menuDrawer"]')))
+                                                                 '//*[@resource-id="com.ajaxsystems:id/menuDrawer"]')))
         menu_button.click()
 
-            # Нажатие на одну из кнопок на "SideBar"
-        setting_button = wait.until(ec.presence_of_element_located((By.XPATH,
-                                                                        f'//*[@resource-id="{resource_id}"]')))
+        # Нажатие на одну из кнопок на "SideBar"
+        setting_button = wait.until(ec.presence_of_element_located((By.XPATH, f'//*[@resource-id="{resource_id}"]')))
         setting_button.click()
 
+        # Поиск нужного элемента для подтверждения успешной работы элемента "SideBar"
+        result_value = wait.until(ec.presence_of_element_located((By.XPATH, f'//*[@resource-id="{test_value}"]')))
+        result_text = result_value.text
         appium_driver.press_keycode(4)
+
+        assert result_text == expected_result
 
     except Exception as e:
         write_in_log_info(f"Произошла ошибка: {str(e)}", log_type="error")
