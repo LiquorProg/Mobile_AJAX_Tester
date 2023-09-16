@@ -101,6 +101,6 @@ def test_user_application_login(username, password, expected_result, appium_driv
     except Exception as e:
         # Логирование исключения
         write_in_log_info(f"Произошла ошибка: {str(e)}", log_type="error")
-        raise
+        raise e
     else:
         write_in_log_info(f"Тест успешный")
